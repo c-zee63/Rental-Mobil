@@ -50,10 +50,10 @@ export default function HelpGuide() {
           <Bab judul="4. +Sewa: membuat pesanan">
             <Langkah>
               <li>Ketik NIK atau No WA pelanggan lalu tekan kaca pembesar. Pelanggan lama terisi otomatis.</li>
-              <li>Pelanggan baru: isi NIK 16 digit, nama, WA, lalu foto KTP dan SIM A dari kamera. Cara cepat: ketuk ikon WhatsApp hijau di samping tombol cari, pilih kontak pemesan, lalu foto KTP. NIK dan nama terisi otomatis (periksa dulu hasilnya).</li>
+              <li>Cara cepat: ketuk ikon <b>scan</b> (hitam) di samping tombol cari, arahkan kamera ke KTP mendatar dan tahan diam. NIK terbaca otomatis: bila sudah terdaftar, pelanggan langsung terpilih; bila belum, form pelanggan baru terbuka dengan NIK terisi. Lalu isi nama dan No WA sendiri. Foto KTP hasil scan ikut terlampir. Foto <b>KTP atau SIM A</b> cukup salah satu (kolom keduanya tetap ada). Alternatif: ikon WhatsApp hijau untuk pilih kontak pemesan lalu foto KTP.</li>
               <li>Pilih unit, layanan (lepas kunci atau dengan sopir), durasi, dan waktu mulai.</li>
               <li>Isi DP dan deposit. Total dan sisa tagihan dihitung otomatis.</li>
-              <li>Tekan <b>Simpan pesanan</b>, lalu kirim invoice.</li>
+              <li>Tekan <b>Simpan pesanan</b>.</li>
             </Langkah>
             <Contoh>Budi sewa Avanza 2 hari (24 jam × 2) mulai Sabtu 09:00 → Rp900.000. Dengan sopir Rp250.000/hari → +Rp500.000 = Rp1.400.000. DP Rp300.000 → sisa Rp1.100.000.</Contoh>
             <p>Peringatan merah muncul bila jadwal <b>bentrok</b> dengan pesanan lain pada unit yang sama. Pelanggan blacklist ditandai merah dan perlu konfirmasi untuk lanjut. Tarif 12 jam = 60% harian, mingguan = 6,3× harian (ubah di <code>src/lib/pricing.js</code>).</p>
@@ -89,7 +89,7 @@ export default function HelpGuide() {
           </Bab>
 
           <Bab judul="10. Pelanggan, pesanan, dan blacklist">
-            <p><b>Pelanggan</b>: cari, lihat foto KTP/SIM dan jumlah sewa, ubah nama/WA, atau tandai <b>Blacklist</b> dengan alasan. <b>Pesanan</b>: daftar semua pesanan dengan filter “Belum lunas”, bisa dicari berdasarkan nama, plat, atau kode. Pesanan berstatus Booked bisa diubah atau dibatalkan. Saat batal dan sudah ada DP, Anda memilih DP hangus (jadi pendapatan) atau dikembalikan.</p>
+            <p><b>Pelanggan</b>: cari, lihat foto KTP/SIM dan jumlah sewa, ubah nama/WA, atau tandai <b>Blacklist</b> dengan alasan. <b>Pesanan</b>: daftar semua pesanan dengan filter “Belum lunas”, bisa dicari berdasarkan nama, plat, atau kode. Pesanan berstatus Booked bisa diubah atau dibatalkan: tekan <b>Batalkan pesanan</b> di kartu pesanan (daftar Pesanan), di halaman detail, atau di menu Jadwal (ketuk kotak booking di timeline). Saat batal dan sudah ada DP, Anda memilih DP hangus (jadi pendapatan) atau dikembalikan. Jadwal unit otomatis kosong lagi.</p>
           </Bab>
 
           <Bab judul="11. Peta GPS dan peringatan kecepatan">
