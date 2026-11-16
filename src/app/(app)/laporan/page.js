@@ -1,17 +1,21 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import { collection, deleteDoc, doc, getDoc, onSnapshot, query, setDoc, Timestamp, updateDoc, where } from 'firebase/firestore';
-import { Plus, Trash2 } from 'lucide-react';
+import Link from 'next/link';
+import { ChevronLeft, ChevronRight, Download, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { useFleet } from '@/lib/useFleet';
 import { toDataUrl, writeSafe } from '@/lib/images';
-import { rupiah, tglPendek, toISODate, toDate } from '@/lib/format';
+import { rupiah, tglJam, tglPendek, toISODate, toDate } from '@/lib/format';
 import { sisaTagihan, totalTagihan } from '@/lib/billing';
 import PhotoField from '@/components/PhotoField';
-import { Alert, Chips, Field, Sheet, btnPrimary, inputCls } from '@/components/ui';
+import BackupPanel from '@/components/BackupPanel';
+import { Alert, Chips, Field, Sheet, btnGhost, btnPrimary, inputCls } from '@/components/ui';
 
 const KATEGORI = [['servis', 'Servis'], ['oli', 'Ganti oli'], ['cuci', 'Cuci'], ['pajak', 'Pajak'], ['lainnya', 'Lainnya']];
 const bulanIni = () => toISODate(new Date()).slice(0, 7);
+const STATUS = { booked: ['Booked', 'bg-petrol-soft text-petrol-dark'], on_rent: ['On-Rent', 'bg-amber-soft text-ink'], completed: ['Selesai', 'bg-mist text-ink/70'], cancelled: ['Batal', 'bg-signal-soft text-signal'] };
+const namaKategori = (k) => KATEGORI.find(([x]) => x === k)?.[1] || k;
 
 export default function LaporanPage() {
   const { vehicles } = useFleet();
@@ -20,7 +24,8 @@ export default function LaporanPage() {
   const [bookings, setBookings] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [open, setOpen] = useState(false);
-  const [lihat, setLihat] = useState(null);
+  const [detail, setDetail] = useState(null); // { tipe: 'unit', vid } | { tipe: 'biaya', id, dari? }
+  const [cadangOpen, setCadangOpen] = useState(false);
 
   useEffect(() => {
     const [y, m] = bulan.split('-').map(Number);
@@ -45,23 +50,24 @@ export default function LaporanPage() {
 
   const tot = rows.reduce((t, r) => ({ p: t.p + r.pendapatan, b: t.b + r.biaya }), { p: 0, b: 0 });
   const piutang = bookings.filter((b) => b.status !== 'cancelled').reduce((t, b) => t + sisaTagihan(b), 0);
-  async function bukaNota(id) {
-    setLihat({ loading: true });
-    try { const s = await getDoc(doc(db, 'images', id)); setLihat({ src: s.data()?.data || '' }); }
-    catch { setLihat({ src: '' }); }
-  }
   async function hapusBiaya(e) {
-    if (!confirm('Hapus catatan biaya ini?')) return;
+    if (!confirm('Hapus catatan biaya ini?')) return false;
     await writeSafe(deleteDoc(doc(db, 'expenses', e.id)));
     if (e.receipt_id) await writeSafe(deleteDoc(doc(db, 'images', e.receipt_id)));
+    return true;
   }
   const plat = (id) => vehicles.find((v) => v.id === id)?.plate_number || '(unit dihapus)';
+  const detailUnit = detail?.tipe === 'unit' ? vehicles.find((v) => v.id === detail.vid) : null;
+  const detailBiaya = detail?.tipe === 'biaya' ? expenses.find((x) => x.id === detail.id) : null;
 
   return (
     <main className="px-4 pt-6 space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Laporan</h1>
-        <button onClick={() => setOpen(true)} className="h-10 px-4 rounded-full bg-petrol text-white text-sm font-semibold flex items-center gap-1.5"><Plus size={16} /> Biaya</button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setCadangOpen(true)} aria-label="Cadangkan data" className="w-10 h-10 grid place-items-center rounded-full bg-white border border-line"><Download size={18} /></button>
+          <button onClick={() => setOpen(true)} className="h-10 px-4 rounded-full bg-petrol text-white text-sm font-semibold flex items-center gap-1.5"><Plus size={16} /> Biaya</button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -81,11 +87,11 @@ export default function LaporanPage() {
         {rows.map(({ v, pendapatan, biaya, n }) => {
           const profit = pendapatan - biaya;
           return (
-            <div key={v.id} className="bg-white border border-line rounded-xl p-3">
-              <div className="flex justify-between"><p className="font-semibold">{v.plate_number} <span className="font-normal text-ink/60">{v.brand_model}</span></p>
+            <button key={v.id} type="button" onClick={() => setDetail({ tipe: 'unit', vid: v.id })} className="w-full text-left bg-white border border-line rounded-xl p-3 active:bg-mist">
+              <div className="flex justify-between gap-2"><p className="font-semibold">{v.plate_number} <span className="font-normal text-ink/60">{v.brand_model}</span></p>
                 <p className={`font-bold ${profit < 0 ? 'text-signal' : 'text-petrol'}`}>{rupiah(profit)}</p></div>
-              <p className="text-xs text-ink/60 mt-1">{n} sewa · pendapatan {rupiah(pendapatan)} · biaya {rupiah(biaya)}</p>
-            </div>
+              <p className="text-xs text-ink/60 mt-1 flex items-center justify-between gap-2"><span>{n} sewa · pendapatan {rupiah(pendapatan)} · biaya {rupiah(biaya)}</span><ChevronRight size={16} className="shrink-0" /></p>
+            </button>
           );
         })}
         {!rows.length && <p className="text-sm text-ink/60">Belum ada unit.</p>}
@@ -94,28 +100,141 @@ export default function LaporanPage() {
       <section className="space-y-2">
         <h2 className="font-display font-bold text-lg">Catatan biaya</h2>
         {expenses.map((e) => (
-          <div key={e.id} className="bg-white border border-line rounded-xl p-3 flex justify-between gap-2 text-sm">
-            <div className="min-w-0">
-              <p className="font-semibold">{plat(e.vehicle_id)} · {KATEGORI.find(([k]) => k === e.category)?.[1] || e.category}</p>
-              <p className="text-ink/60 truncate">{tglPendek(e.expense_date)}{e.description ? ` · ${e.description}` : ''}</p>
-              {e.receipt_id && <button onClick={() => bukaNota(e.receipt_id)} className="text-petrol font-medium">Lihat nota</button>}
-            </div>
-            <div className="text-right shrink-0">
-              <p className="font-semibold">{rupiah(e.amount)}</p>
-              <button aria-label="Hapus biaya" onClick={() => hapusBiaya(e)} className="text-signal mt-1"><Trash2 size={16} /></button>
-            </div>
+          <div key={e.id} className="bg-white border border-line rounded-xl flex items-stretch text-sm">
+            <button type="button" onClick={() => setDetail({ tipe: 'biaya', id: e.id })} className="flex-1 min-w-0 text-left p-3 flex justify-between gap-2 active:bg-mist rounded-l-xl">
+              <div className="min-w-0">
+                <p className="font-semibold">{plat(e.vehicle_id)} · {namaKategori(e.category)}</p>
+                <p className="text-ink/60 truncate">{tglPendek(e.expense_date)}{e.description ? ` · ${e.description}` : ''}</p>
+                {e.receipt_id && <p className="text-petrol font-medium flex items-center gap-1"><Paperclip size={13} />Ada foto nota</p>}
+              </div>
+              <p className="font-semibold shrink-0">{rupiah(e.amount)}</p>
+            </button>
+            <button aria-label="Hapus biaya" onClick={() => hapusBiaya(e)} className="px-3 text-signal border-l border-line grid place-items-center"><Trash2 size={16} /></button>
           </div>
         ))}
         {!expenses.length && <p className="text-sm text-ink/60">Belum ada biaya pada periode ini.</p>}
       </section>
 
-      <Sheet open={!!lihat} onClose={() => setLihat(null)} title="Foto nota">
-        {lihat?.loading ? <p className="text-ink/60">Memuat…</p> : lihat?.src
-          // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={lihat.src} alt="Nota" className="w-full rounded-xl" /> : <p className="text-ink/60">Foto tidak ditemukan.</p>}
+      <Sheet open={!!detailUnit || !!detailBiaya} onClose={() => setDetail(null)} title={detailBiaya ? 'Detail biaya' : detailUnit ? `${detailUnit.plate_number} · ${detailUnit.brand_model}` : ''}>
+        {detailBiaya && (
+          <DetailBiaya e={detailBiaya} unit={vehicles.find((v) => v.id === detailBiaya.vehicle_id)}
+            onBack={detail?.dari ? () => setDetail({ tipe: 'unit', vid: detail.dari }) : null}
+            onHapus={async () => { if (await hapusBiaya(detailBiaya)) setDetail(null); }} />
+        )}
+        {!detailBiaya && detailUnit && (
+          <RiwayatUnit v={detailUnit} ringkas={rows.find((r) => r.v.id === detailUnit.id)} periode={semua ? 'Semua periode' : periodeLabel(bulan)}
+            bookings={bookings.filter((b) => b.vehicle_id === detailUnit.id).sort((x, y) => toDate(y.start_datetime) - toDate(x.start_datetime))}
+            expenses={expenses.filter((x) => x.vehicle_id === detailUnit.id)}
+            onBiaya={(id) => setDetail({ tipe: 'biaya', id, dari: detailUnit.id })} />
+        )}
       </Sheet>
+      <Sheet open={cadangOpen} onClose={() => setCadangOpen(false)} title="Cadangkan data"><BackupPanel /></Sheet>
       <ExpenseSheet open={open} onClose={() => setOpen(false)} vehicles={vehicles} />
     </main>
+  );
+}
+
+const periodeLabel = (bulan) => { const [y, m] = bulan.split('-').map(Number); return new Date(y, m - 1, 1).toLocaleDateString('id-ID', { month: 'long', year: 'numeric' }); };
+const Baris = ({ k, v, tebal, cls = '' }) => <div className={`flex justify-between gap-4 ${tebal ? 'font-semibold' : ''} ${cls}`}><dt>{k}</dt><dd className="text-right">{v}</dd></div>;
+
+// Pop-up riwayat lengkap satu unit: ringkasan, semua sewa (tagihan, pembayaran), dan semua biaya pada periode terpilih
+function RiwayatUnit({ v, ringkas, periode, bookings, expenses, onBiaya }) {
+  const { pendapatan = 0, biaya = 0, n = 0 } = ringkas || {};
+  const profit = pendapatan - biaya;
+  return (
+    <div className="space-y-4">
+      <section className="bg-petrol text-white rounded-2xl p-4">
+        <p className="text-sm opacity-80">Profit · {periode}</p>
+        <p className="font-display text-2xl font-bold mt-0.5">{rupiah(profit)}</p>
+        <p className="text-sm opacity-80 mt-1">{n} sewa · Pendapatan {rupiah(pendapatan)} − Biaya {rupiah(biaya)}</p>
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="font-display font-bold">Riwayat sewa ({bookings.length})</h3>
+        {bookings.map((b) => {
+          const [lbl, cls] = STATUS[b.status] || ['-', ''];
+          const batal = b.status === 'cancelled', sisa = sisaTagihan(b);
+          return (
+            <div key={b.id} className="bg-white border border-line rounded-xl p-3 text-sm space-y-2">
+              <div className="flex justify-between gap-2">
+                <div className="min-w-0"><p className="font-semibold truncate">{b.customer_name}</p><p className="text-xs text-ink/60">{b.booking_code} · {b.service_type === 'dengan_sopir' ? 'Dengan sopir' : 'Lepas kunci'}</p></div>
+                <span className={`text-xs font-semibold rounded-full px-2.5 py-1 h-fit shrink-0 ${cls}`}>{lbl}</span>
+              </div>
+              <p className="text-xs text-ink/70">{tglJam(b.start_datetime)} → {tglJam(b.end_datetime)}</p>
+              <dl className="space-y-1 border-t border-line pt-2">
+                <Baris k="Biaya sewa" v={rupiah(b.total_price)} />
+                {b.overtime_fee > 0 && <Baris k="Denda overtime" v={rupiah(b.overtime_fee)} />}
+                {(b.extra_fees || []).map((x, i) => <Baris key={i} k={x.label || 'Biaya tambahan'} v={rupiah(x.amount)} />)}
+                <Baris k="Total tagihan" v={rupiah(totalTagihan(b))} tebal />
+                <Baris k="Sudah dibayar" v={rupiah(b.dp_paid)} />
+                {!batal && <Baris k={sisa > 0 ? 'Sisa tagihan' : 'Status'} v={sisa > 0 ? rupiah(sisa) : 'Lunas'} tebal cls={sisa > 0 ? 'text-signal' : 'text-petrol'} />}
+                {batal && b.forfeited_dp > 0 && <Baris k="DP hangus (pendapatan)" v={rupiah(b.forfeited_dp)} tebal />}
+                {b.deposit_amount > 0 && <Baris k="Deposit" v={`${rupiah(b.deposit_amount)} · ${b.deposit_returned ? 'dikembalikan' : 'ditahan'}`} />}
+              </dl>
+              {(b.payments || []).length > 0 && (
+                <div className="border-t border-line pt-2 space-y-1">
+                  <p className="text-xs font-semibold text-ink/60">Pembayaran</p>
+                  {b.payments.map((p, i) => (
+                    <div key={i} className="flex justify-between gap-3 text-xs"><span className="text-ink/70">{tglPendek(p.at)} · {p.method}{p.note ? ` · ${p.note}` : ''}</span><b>{rupiah(p.amount)}</b></div>
+                  ))}
+                </div>
+              )}
+              <Link href={`/pesanan/detail?id=${b.id}`} className="text-petrol font-semibold inline-flex items-center gap-0.5">Buka detail pesanan <ChevronRight size={14} /></Link>
+            </div>
+          );
+        })}
+        {!bookings.length && <p className="text-sm text-ink/60">Belum ada sewa pada periode ini.</p>}
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="font-display font-bold">Biaya unit ({expenses.length})</h3>
+        {expenses.map((e) => (
+          <button key={e.id} type="button" onClick={() => onBiaya(e.id)} className="w-full text-left bg-white border border-line rounded-xl p-3 text-sm flex justify-between gap-3 active:bg-mist">
+            <div className="min-w-0">
+              <p className="font-semibold">{namaKategori(e.category)}</p>
+              <p className="text-ink/60 truncate">{tglPendek(e.expense_date)}{e.description ? ` · ${e.description}` : ''}</p>
+              {e.receipt_id && <p className="text-petrol font-medium flex items-center gap-1"><Paperclip size={13} />Ada foto nota</p>}
+            </div>
+            <p className="font-semibold shrink-0">{rupiah(e.amount)}</p>
+          </button>
+        ))}
+        {!expenses.length && <p className="text-sm text-ink/60">Belum ada biaya pada periode ini.</p>}
+      </section>
+    </div>
+  );
+}
+
+// Pop-up detail satu catatan biaya, termasuk foto nota
+function DetailBiaya({ e, unit, onBack, onHapus }) {
+  const [nota, setNota] = useState({ loading: !!e.receipt_id, src: '' });
+  useEffect(() => {
+    if (!e.receipt_id) return;
+    let alive = true;
+    getDoc(doc(db, 'images', e.receipt_id)).then((s) => alive && setNota({ loading: false, src: s.data()?.data || '' })).catch(() => alive && setNota({ loading: false, src: '' }));
+    return () => { alive = false; };
+  }, [e.receipt_id]);
+  return (
+    <div className="space-y-3">
+      {onBack && <button type="button" onClick={onBack} className="text-petrol font-semibold text-sm inline-flex items-center gap-0.5"><ChevronLeft size={16} />Kembali ke riwayat unit</button>}
+      <section className="bg-white border border-line rounded-2xl p-4 text-sm space-y-2">
+        <p className="font-display text-2xl font-bold">{rupiah(e.amount)}</p>
+        <dl className="space-y-1.5 border-t border-line pt-2">
+          <Baris k="Unit" v={unit ? `${unit.plate_number} · ${unit.brand_model}` : '(unit dihapus)'} />
+          <Baris k="Kategori" v={namaKategori(e.category)} />
+          <Baris k="Tanggal" v={tglPendek(e.expense_date)} />
+          <Baris k="Keterangan" v={e.description || '-'} />
+        </dl>
+      </section>
+      {e.receipt_id && (
+        <section className="space-y-2">
+          <h3 className="font-display font-bold">Foto nota</h3>
+          {nota.loading ? <p className="text-ink/60 text-sm">Memuat…</p> : nota.src
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={nota.src} alt="Nota" className="w-full rounded-xl border border-line" /> : <p className="text-ink/60 text-sm">Foto tidak ditemukan.</p>}
+        </section>
+      )}
+      <button type="button" onClick={onHapus} className={`${btnGhost} w-full text-signal flex items-center justify-center gap-2`}><Trash2 size={16} />Hapus catatan biaya</button>
+    </div>
   );
 }
 

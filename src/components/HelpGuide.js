@@ -50,7 +50,7 @@ export default function HelpGuide() {
           <Bab judul="4. +Sewa: membuat pesanan">
             <Langkah>
               <li>Ketik NIK atau No WA pelanggan lalu tekan kaca pembesar. Pelanggan lama terisi otomatis.</li>
-              <li>Pelanggan baru: isi NIK 16 digit, nama, WA, lalu foto KTP dan SIM A dari kamera.</li>
+              <li>Pelanggan baru: isi NIK 16 digit, nama, WA, lalu foto KTP dan SIM A dari kamera. Cara cepat: ketuk ikon WhatsApp hijau di samping tombol cari, pilih kontak pemesan, lalu foto KTP. NIK dan nama terisi otomatis (periksa dulu hasilnya).</li>
               <li>Pilih unit, layanan (lepas kunci atau dengan sopir), durasi, dan waktu mulai.</li>
               <li>Isi DP dan deposit. Total dan sisa tagihan dihitung otomatis.</li>
               <li>Tekan <b>Simpan pesanan</b>, lalu kirim invoice.</li>
@@ -84,7 +84,7 @@ export default function HelpGuide() {
           </Bab>
 
           <Bab judul="9. Biaya dan laporan profit">
-            <p>Di <b>Laporan → + Biaya</b>, catat servis, oli, cuci, atau pajak per unit, boleh dengan foto nota. Profit bersih = pendapatan − biaya, per unit dan total, per bulan atau semua periode. Piutang (belum tertagih) tampil di kartu hijau.</p>
+            <p>Di <b>Laporan → + Biaya</b>, catat servis, oli, cuci, atau pajak per unit, boleh dengan foto nota. Profit bersih = pendapatan − biaya, per unit dan total, per bulan atau semua periode. Piutang (belum tertagih) tampil di kartu hijau. Ketuk kartu unit untuk melihat riwayat sewa, pembayaran, dan biaya unit itu; ketuk catatan biaya untuk melihat detail dan foto nota.</p>
             <Contoh>Catat “Ganti oli Rp350.000” dengan odometer 50.000 dan interval 5.000 km → pengingat oli berikutnya otomatis di 55.000 km.</Contoh>
           </Bab>
 
@@ -101,7 +101,7 @@ export default function HelpGuide() {
           </Bab>
 
           <Bab judul="12. Cadangkan data">
-            <p>Firebase gratis tidak punya backup otomatis. Buka <b>Beranda → Cadangkan</b> dan unduh CSV atau JSON setiap bulan, lalu simpan di Google Drive atau PC. Foto KTP/SIM tidak ikut diunduh.</p>
+            <p>Firebase gratis tidak punya backup otomatis. Buka <b>Laporan</b>, ketuk ikon unduh di bagian paling atas, lalu unduh CSV atau JSON setiap bulan, lalu simpan di Google Drive atau PC. Foto KTP/SIM tidak ikut diunduh.</p>
           </Bab>
 
           <Bab judul="13. Pasang di HP dan bekerja tanpa sinyal">

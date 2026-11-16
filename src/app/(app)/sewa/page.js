@@ -12,6 +12,8 @@ import { DURASI, hitungTarif, DENDA_PER_JAM, GRACE_MENIT } from '@/lib/pricing';
 import KirimInvoice from '@/components/KirimInvoice';
 import { normPhone, rupiah, toLocalInput, tglJam } from '@/lib/format';
 import PhotoField from '@/components/PhotoField';
+import ScanKtpSheet from '@/components/ScanKtpSheet';
+import WhatsAppIcon from '@/components/WhatsAppIcon';
 import { Alert, Chips, Field, Section, btnGhost, btnPrimary, inputCls } from '@/components/ui';
 
 const KOSONG = { nik: '', full_name: '', phone_whatsapp: '', ktp_url: '', sim_url: '', is_blacklisted: false, blacklist_reason: '' };
@@ -34,6 +36,8 @@ function Form() {
   const [ktpPrev, setKtpPrev] = useState('');
   const [simPrev, setSimPrev] = useState('');
   const [ignoreBL, setIgnoreBL] = useState(false);
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanMsg, setScanMsg] = useState(null);
 
   const [vehicleId, setVehicleId] = useState(sp.get('vehicle') || '');
   const [layanan, setLayanan] = useState('lepas_kunci');
@@ -79,13 +83,41 @@ function Form() {
       const res = await getDocs(query(collection(db, 'customers'), where('phone_whatsapp', '==', normPhone(q))));
       if (!res.empty) snap = res.docs[0];
     }
-    setIgnoreBL(false); setKtp(null); setSim(null); setKtpPrev(''); setSimPrev('');
+    setIgnoreBL(false); setKtp(null); setSim(null); setKtpPrev(''); setSimPrev(''); setScanMsg(null);
     if (snap) {
       const d = snap.data();
       setCust({ ...KOSONG, ...d, nik: snap.id }); setFound('found');
       loadImage(d.ktp_url).then(setKtpPrev); loadImage(d.sim_url).then(setSimPrev);
     }
     else { setCust({ ...KOSONG, nik: q.length >= 15 ? q : '', phone_whatsapp: q.length < 15 ? q : '' }); setFound('new'); }
+  }
+
+  // Hasil dari pop-up WhatsApp + scan KTP: isi NIK, nama, dan nomor WA tanpa mengetik satu per satu
+  async function terapkanScan({ phone, nik, nama, file, gagal }) {
+    setIgnoreBL(false); setSim(null); setSimPrev(''); setKtpPrev('');
+    setKtp(file);
+    let snap = null;
+    try {
+      if (nik.length === 16) {
+        const d = await getDoc(doc(db, 'customers', nik));
+        if (d.exists()) snap = d;
+      } else if (phone) {
+        const res = await getDocs(query(collection(db, 'customers'), where('phone_whatsapp', '==', normPhone(phone))));
+        if (!res.empty) snap = res.docs[0];
+      }
+    } catch { /* offline: lanjut sebagai pelanggan baru */ }
+
+    if (snap) {
+      const d = snap.data();
+      setCust({ ...KOSONG, ...d, nik: snap.id }); setFound('found'); setCari(snap.id);
+      loadImage(d.sim_url).then(setSimPrev);
+      setScanMsg({ tone: 'info', text: 'Pelanggan lama ditemukan dari KTP. Data tersimpan dipakai, foto KTP baru akan menggantikan yang lama.' });
+    } else {
+      setCust({ ...KOSONG, nik, full_name: nama, phone_whatsapp: phone }); setFound('new'); setCari(nik || phone);
+      if (gagal || (!nik && !nama)) setScanMsg({ tone: 'warn', text: 'Foto KTP tersimpan, tetapi NIK dan nama belum terbaca. Isi manual di bawah, atau foto ulang KTP (terang, mendatar, tanpa silau).' });
+      else if (nik.length !== 16) setScanMsg({ tone: 'warn', text: `NIK terbaca ${nik.length} digit (seharusnya 16). Periksa dan perbaiki NIK serta nama sesuai KTP.` });
+      else setScanMsg({ tone: 'info', text: 'NIK dan nama dibaca otomatis dari KTP. Cocokkan dengan fisik KTP sebelum menyimpan.' });
+    }
   }
 
   async function simpan() {
@@ -164,7 +196,9 @@ function Form() {
           <input className={inputCls} inputMode="numeric" placeholder="NIK atau No WhatsApp" value={cari}
             onChange={(e) => setCari(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && cariPelanggan()} />
           <button type="button" onClick={cariPelanggan} aria-label="Cari pelanggan" className="w-12 h-12 shrink-0 rounded-xl bg-petrol text-white grid place-items-center"><Search size={20} /></button>
+          <button type="button" onClick={() => setScanOpen(true)} aria-label="Pilih kontak WhatsApp dan foto KTP" className="w-12 h-12 shrink-0 rounded-xl bg-[#25D366] text-white grid place-items-center"><WhatsAppIcon size={24} /></button>
         </div>
+        {scanMsg && <Alert tone={scanMsg.tone}>{scanMsg.text}</Alert>}
         {found === 'found' && <Alert tone="info">Pelanggan lama ditemukan, data terisi otomatis.</Alert>}
         {found === 'new' && <Alert tone="warn">Belum terdaftar. Lengkapi data pelanggan baru di bawah.</Alert>}
         {cust.is_blacklisted && (
@@ -237,7 +271,8 @@ function Form() {
 
       {error && <Alert>{error}</Alert>}
       <button onClick={simpan} disabled={busy || !found} className={`${btnPrimary} w-full`}>{busy ? 'Menyimpan…' : 'Simpan pesanan'}</button>
-      {!found && <p className="text-center text-sm text-ink/60">Cari pelanggan dulu dengan NIK atau No WhatsApp.</p>}
+      {!found && <p className="text-center text-sm text-ink/60">Cari pelanggan dulu dengan NIK atau No WhatsApp, atau ketuk ikon WhatsApp untuk pilih kontak dan foto KTP.</p>}
+      <ScanKtpSheet open={scanOpen} onClose={() => setScanOpen(false)} onResult={terapkanScan} />
     </main>
   );
 }

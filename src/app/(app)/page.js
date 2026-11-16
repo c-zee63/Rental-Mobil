@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ClipboardList, Download, LogOut, Settings, Users } from 'lucide-react';
+import { ClipboardList, LogOut, Settings, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFleet } from '@/lib/useFleet';
 import { useLiveGps } from '@/lib/gpsLive';
@@ -27,9 +27,6 @@ export default function BerandaPage() {
           </h1>
         </div>
         <div className="flex gap-2 shrink-0">
-          <Link href="/cadangan" aria-label="Cadangkan data" className="w-10 h-10 grid place-items-center rounded-full bg-white border border-line">
-            <Download size={18} />
-          </Link>
           <button onClick={logout} aria-label="Keluar" className="w-10 h-10 grid place-items-center rounded-full bg-white border border-line">
             <LogOut size={18} />
           </button>
