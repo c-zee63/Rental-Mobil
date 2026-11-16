@@ -2,11 +2,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { collection, doc, onSnapshot, query, Timestamp, updateDoc, where } from 'firebase/firestore';
-import { ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { useFleet } from '@/lib/useFleet';
 import { addDays, awalHari, rupiah, tglJam, toDate, toISODate } from '@/lib/format';
-import { invoiceText, waUrl } from '@/lib/whatsapp';
+import KirimInvoice from '@/components/KirimInvoice';
 import { Sheet, btnGhost, btnPrimary } from '@/components/ui';
 
 const DAYS = 14;
@@ -95,7 +95,7 @@ export default function JadwalPage() {
               <Link href={`/sewa/extend?booking=${sel.id}`} className={`${btnGhost} w-full`}>Perpanjang</Link>
             </>}
             <Link href={`/pesanan/detail?id=${sel.id}`} className={`${btnGhost} w-full`}>Detail, pembayaran, dan biaya</Link>
-            {sel.customer_phone && <a href={waUrl(sel.customer_phone, invoiceText(sel))} target="_blank" rel="noopener noreferrer" className={`${btnGhost} w-full grid-flow-col gap-2`}><MessageCircle size={18} />Kirim invoice WhatsApp</a>}
+            <KirimInvoice booking={sel} jenis={sel.status === 'completed' ? 'pelunasan' : 'booking'} className={`${btnGhost}`} />
             {sel.status === 'booked' && <button onClick={() => batalkan(sel)} className="w-full text-signal font-semibold h-11">Batalkan pesanan</button>}
           </div>
         )}

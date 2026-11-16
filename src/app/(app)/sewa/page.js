@@ -3,13 +3,13 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { collection, doc, getDoc, getDocs, query, setDoc, Timestamp, where } from 'firebase/firestore';
-import { Search, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Search, CheckCircle2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { useFleet } from '@/lib/useFleet';
 import { toDataUrl, saveImage, loadImage, writeSafe } from '@/lib/images';
 import { cekBentrok, kodeBooking } from '@/lib/booking';
 import { DURASI, hitungTarif, DENDA_PER_JAM, GRACE_MENIT } from '@/lib/pricing';
-import { invoiceText, waUrl } from '@/lib/whatsapp';
+import KirimInvoice from '@/components/KirimInvoice';
 import { normPhone, rupiah, toLocalInput, tglJam } from '@/lib/format';
 import PhotoField from '@/components/PhotoField';
 import { Alert, Chips, Field, Section, btnGhost, btnPrimary, inputCls } from '@/components/ui';
@@ -147,8 +147,7 @@ function Form() {
           <p className="text-ink/70 mt-1">{done.booking_code} · {done.vehicle_plate} · {tglJam(done.start_datetime)}</p>
         </div>
         <div className="space-y-3">
-          <a href={waUrl(done.customer_phone, invoiceText(done, 'booking'))} target="_blank" rel="noopener noreferrer"
-            className={`${btnPrimary} gap-2 grid-flow-col`}><MessageCircle size={20} /> Kirim invoice via WhatsApp</a>
+          <KirimInvoice booking={done} jenis="booking" className={btnPrimary} />
           <Link href={`/sewa/serah-terima?booking=${done.id}&type=checkout`} className={btnGhost}>Lakukan serah terima sekarang</Link>
           <button onClick={() => location.assign('/sewa')} className="text-petrol font-semibold">Buat pesanan lain</button>
         </div>

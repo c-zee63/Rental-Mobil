@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { ClipboardList, Download, LogOut, Users } from 'lucide-react';
+import { ClipboardList, Download, LogOut, Settings, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useFleet } from '@/lib/useFleet';
 import { useLiveGps } from '@/lib/gpsLive';
@@ -30,8 +30,8 @@ export default function BerandaPage() {
         </button>
       </header>
 
-      <nav aria-label="Pintasan" className="grid grid-cols-3 gap-2">
-        {[['/pesanan', 'Pesanan', ClipboardList], ['/pelanggan', 'Pelanggan', Users], ['/cadangan', 'Cadangkan', Download]].map(([h, l, Icon]) => (
+      <nav aria-label="Pintasan" className="grid grid-cols-2 gap-2">
+        {[['/pesanan', 'Pesanan', ClipboardList], ['/pelanggan', 'Pelanggan', Users], ['/cadangan', 'Cadangkan', Download], ['/pengaturan', 'Pengaturan', Settings]].map(([h, l, Icon]) => (
           <Link key={h} href={h} className="bg-white border border-line rounded-xl h-14 flex items-center justify-center gap-2 text-sm font-semibold"><Icon size={18} className="text-petrol" />{l}</Link>
         ))}
       </nav>

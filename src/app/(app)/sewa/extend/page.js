@@ -3,11 +3,10 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { doc, getDoc, increment, Timestamp, updateDoc } from 'firebase/firestore';
-import { MessageCircle } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { cekBentrok } from '@/lib/booking';
 import { hargaPerpanjang } from '@/lib/pricing';
-import { invoiceText, waUrl } from '@/lib/whatsapp';
+import KirimInvoice from '@/components/KirimInvoice';
 import { rupiah, toDate, tglJam } from '@/lib/format';
 import { writeSafe } from '@/lib/images';
 import { Alert, Chips, Field, Section, btnGhost, btnPrimary, inputCls } from '@/components/ui';
@@ -61,7 +60,7 @@ function Form() {
       <main className="px-4 pt-10 space-y-4 text-center">
         <h1 className="font-display text-2xl font-bold">Sewa diperpanjang</h1>
         <p className="text-ink/70">Selesai baru: {tglJam(done.end_datetime)}</p>
-        <a href={waUrl(b.customer_phone, invoiceText(done, 'perpanjang'))} target="_blank" rel="noopener noreferrer" className={`${btnPrimary} grid-flow-col gap-2`}><MessageCircle size={20} /> Kirim via WhatsApp</a>
+        <KirimInvoice booking={done} jenis="perpanjang" className={btnPrimary} label="Kirim invoice PDF via WhatsApp" />
         <Link href="/" className={btnGhost}>Kembali ke Beranda</Link>
       </main>
     );

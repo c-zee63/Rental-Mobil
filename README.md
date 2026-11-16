@@ -25,3 +25,9 @@ Semua query memakai satu filter range / equality sehingga tidak butuh composite 
 - GPS: isi kolom di Armada > Ubah unit. `speed_kmh` + `speed_updated_at` pada dokumen unit, atau URL data JSON (butuh CORS), memicu peringatan > 100 km/jam.
 - `customers.ktp_url` / `sim_url` berisi ID dokumen foto di koleksi `images` (bukan URL).
 - `bookings.dp_paid` = total uang yang sudah diterima; rincian ada di array `payments`.
+
+## Pembaruan: PDF invoice, pengaturan usaha, GPS lengkap, panduan
+- `Pengaturan` (`/pengaturan`): logo, nama, alamat, telepon, rekening, catatan. Disimpan di `settings/business` (WAJIB tambah rule `settings`, lihat firestore.rules).
+- Invoice PDF dibuat di browser (jsPDF) dan dikirim lewat menu Bagikan HP. wa.me tidak bisa melampirkan file.
+- Kolom GPS: link buka, link pantau publik, API JSON (auth none/bearer/basic/header), path lat/lng/speed/waktu, satuan, interval, tombol Uji koneksi.
+- Ikon "?" di kanan bawah membuka panduan penggunaan.

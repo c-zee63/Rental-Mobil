@@ -3,11 +3,11 @@ import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { doc, onSnapshot, Timestamp, updateDoc } from 'firebase/firestore';
-import { MessageCircle, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { writeSafe } from '@/lib/images';
 import { sumExtras, totalTagihan, sisaTagihan } from '@/lib/billing';
-import { invoiceText, waUrl } from '@/lib/whatsapp';
+import KirimInvoice from '@/components/KirimInvoice';
 import { rupiah, tglJam, tglPendek } from '@/lib/format';
 import ExtraFeesEditor from '@/components/ExtraFeesEditor';
 import { Chips, Field, Section, btnGhost, btnPrimary, inputCls } from '@/components/ui';
@@ -120,9 +120,7 @@ function Detail() {
       )}
 
       <div className="space-y-2">
-        {b.customer_phone && (
-          <a href={waUrl(b.customer_phone, invoiceText(b, b.status === 'completed' ? 'pelunasan' : 'booking'))} target="_blank" rel="noopener noreferrer" className={`${btnGhost} w-full grid-flow-col gap-2`}><MessageCircle size={18} /> Kirim invoice WhatsApp</a>
-        )}
+        <KirimInvoice booking={b} jenis={b.status === 'completed' ? 'pelunasan' : 'booking'} className={btnGhost} />
         {b.status === 'booked' && <>
           <Link href={`/sewa/serah-terima?booking=${b.id}&type=checkout`} className={`${btnPrimary} w-full`}>Serah terima</Link>
           <Link href={`/pesanan/ubah?id=${b.id}`} className={`${btnGhost} w-full`}>Ubah pesanan</Link>

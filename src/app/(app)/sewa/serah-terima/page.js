@@ -3,12 +3,12 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { collection, doc, getDoc, Timestamp, writeBatch } from 'firebase/firestore';
-import { CheckCircle2, MessageCircle } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { writeSafe } from '@/lib/images';
 import { hitungOvertime } from '@/lib/pricing';
 import { sumExtras, totalTagihan, sisaTagihan } from '@/lib/billing';
-import { invoiceText, waUrl } from '@/lib/whatsapp';
+import KirimInvoice from '@/components/KirimInvoice';
 import { rupiah, toDate, tglJam } from '@/lib/format';
 import ExtraFeesEditor from '@/components/ExtraFeesEditor';
 import { Alert, Chips, Field, Section, btnGhost, btnPrimary, inputCls } from '@/components/ui';
@@ -92,7 +92,7 @@ function Form() {
         {type === 'checkin' && (
           <>
             <p className="text-ink/70">{sisaTagihan(done) === 0 ? 'Pesanan lunas.' : `Sisa tagihan ${rupiah(sisaTagihan(done))}.`}</p>
-            <a href={waUrl(done.customer_phone, invoiceText(done, 'pelunasan'))} target="_blank" rel="noopener noreferrer" className={`${btnPrimary} grid-flow-col gap-2`}><MessageCircle size={20} /> Kirim invoice pelunasan</a>
+            <KirimInvoice booking={done} jenis="pelunasan" className={btnPrimary} label="Kirim kwitansi PDF via WhatsApp" />
           </>
         )}
         <Link href="/" className={btnGhost}>Kembali ke Beranda</Link>

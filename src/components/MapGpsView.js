@@ -89,6 +89,12 @@ export default function MapGpsView({ vehicles = [], bookings = [], focusId }) {
                           <ExternalLink size={14} /> Buka aplikasi GPS
                         </a>
                       )}
+                      {v.gps_share_url && (
+                        <a href={v.gps_share_url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 h-9 rounded-lg bg-[#D99A1E] !text-white text-sm font-semibold">
+                          <Navigation size={14} /> Pantau langsung
+                        </a>
+                      )}
                       <a href={gmapsUrl(v.lat, v.lng)} target="_blank" rel="noopener noreferrer"
                         className="flex items-center justify-center gap-1.5 h-9 rounded-lg border border-[#D5DCD8] text-sm font-semibold">
                         <Navigation size={14} /> Google Maps
