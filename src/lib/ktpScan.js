@@ -126,3 +126,38 @@ export async function bacaKtp(file, onStatus = () => {}) {
     if (img.close) img.close();
   }
 }
+
+// ---------- Scan NIK langsung dari kamera (video) ----------
+
+/** Cek struktur NIK: 16 digit, kode provinsi 11-94, tanggal lahir (+40 untuk perempuan) dan bulan masuk akal. */
+export function nikMasukAkal(nik) {
+  if (!/^\d{16}$/.test(nik || '')) return false;
+  const prov = Number(nik.slice(0, 2));
+  if (prov < 11 || prov > 94) return false;
+  let tgl = Number(nik.slice(6, 8));
+  if (tgl > 40) tgl -= 40;
+  const bln = Number(nik.slice(8, 10));
+  return tgl >= 1 && tgl <= 31 && bln >= 1 && bln <= 12;
+}
+
+/**
+ * Menyiapkan 1 mesin OCR yang dipakai berulang untuk membaca frame kamera.
+ * bacaVideo(video) -> { nik, kanvas } ; kanvas = foto asli frame tersebut (untuk disimpan sebagai foto KTP).
+ */
+export async function siapkanPembaca(onStatus = () => {}) {
+  const { createWorker } = await import('tesseract.js');
+  const worker = await createWorker('eng', 1, {
+    logger: (m) => { if (LABEL_STATUS[m.status]) onStatus(LABEL_STATUS[m.status]); },
+  });
+  return {
+    async bacaVideo(video) {
+      const k = Math.min(1, 1800 / Math.max(video.videoWidth, video.videoHeight));
+      const asli = document.createElement('canvas');
+      asli.width = Math.round(video.videoWidth * k); asli.height = Math.round(video.videoHeight * k);
+      asli.getContext('2d').drawImage(video, 0, 0, asli.width, asli.height);
+      const { data } = await worker.recognize(siapkanCanvas(asli, 0));
+      return { nik: parseKtp(data.text).nik, kanvas: asli };
+    },
+    stop() { worker.terminate().catch(() => {}); },
+  };
+}
