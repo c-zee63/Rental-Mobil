@@ -1,7 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Car } from 'lucide-react';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
@@ -41,10 +40,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-dvh flex flex-col justify-center px-6 max-w-sm mx-auto">
-      <div className="w-14 h-14 rounded-2xl bg-petrol text-white grid place-items-center mb-6">
-        <Car size={28} />
+    <main className="min-h-dvh bg-mist">
+      {/* Banner atas: foto promosi Rental Irigasi Kampal, memudar ke warna latar */}
+      <div className="relative">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/login-bg.webp" alt="Rental Mobil Irigasi Kampal" fetchPriority="high"
+          className="block w-full aspect-[3/2] max-h-[45dvh] object-cover object-center" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-mist to-transparent" />
       </div>
+
+      <div className="relative -mt-6 px-6 pb-10 max-w-sm mx-auto">
       <h1 className="font-display text-3xl font-bold leading-tight">Masuk ke armada Anda</h1>
       <p className="text-ink/70 mt-2 mb-8">Kelola jadwal, serah terima, dan laporan dari satu tempat.</p>
 
@@ -66,6 +71,7 @@ export default function LoginPage() {
         {info && <p className="text-sm text-petrol-dark bg-petrol-soft rounded-lg px-3 py-2">{info}</p>}
         <button type="button" onClick={lupa} className="w-full text-sm font-semibold text-petrol py-2">Lupa sandi?</button>
       </form>
+      </div>
     </main>
   );
 }
