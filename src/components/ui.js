@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 export const inputCls =
@@ -32,6 +33,23 @@ export function Alert({ tone = 'danger', children }) {
 }
 
 export function Sheet({ open, onClose, title, children }) {
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
+
+  // Saat pop-up terbuka, tambahkan 1 entri riwayat: tombol Back HP menutup pop-up (bukan keluar halaman).
+  useEffect(() => {
+    if (!open) return;
+    let viaBack = false;
+    window.history.pushState({ sheet: true }, '');
+    const onPop = () => { viaBack = true; closeRef.current(); };
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      // Ditutup lewat tombol X / simpan: buang entri tambahan tadi (kecuali halaman sudah berpindah)
+      if (!viaBack && window.history.state?.sheet) window.history.back();
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-[1100] bg-black/40 flex items-end" onClick={onClose}>

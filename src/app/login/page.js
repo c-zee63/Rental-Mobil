@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Car } from 'lucide-react';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 
 const PESAN = {
@@ -17,8 +19,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState('');
 
   useEffect(() => { if (user) router.replace('/'); }, [user, router]);
+
+  async function lupa() {
+    setError(''); setInfo('');
+    if (!email) return setError('Isi email dulu, lalu tekan “Lupa sandi”.');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setInfo('Tautan reset sandi dikirim ke email tersebut. Periksa juga folder spam.');
+    } catch (err) { setError(err.code === 'auth/invalid-email' ? 'Format email tidak valid.' : 'Tautan reset gagal dikirim. Coba lagi.'); }
+  }
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -51,6 +63,8 @@ export default function LoginPage() {
         <button disabled={busy} className="w-full h-12 rounded-xl bg-petrol text-white font-semibold active:bg-petrol-dark disabled:opacity-60">
           {busy ? 'Memproses…' : 'Masuk'}
         </button>
+        {info && <p className="text-sm text-petrol-dark bg-petrol-soft rounded-lg px-3 py-2">{info}</p>}
+        <button type="button" onClick={lupa} className="w-full text-sm font-semibold text-petrol py-2">Lupa sandi?</button>
       </form>
     </main>
   );

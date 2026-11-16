@@ -109,7 +109,19 @@ export default function HelpGuide() {
             <p>Hal yang tetap butuh sinyal: login pertama kali, peta baru, dan data GPS otomatis.</p>
           </Bab>
 
-          <Bab judul="14. Masalah yang sering muncul">
+          <Bab judul="14. Menambah pengguna kedua (login sendiri)">
+            <p>Setiap orang punya email dan sandi sendiri, jadi tidak perlu memakai email pemilik. Akun dibuat oleh pemilik di Firebase (tidak lewat aplikasi, agar aman).</p>
+            <Langkah>
+              <li>Buka <b>console.firebase.google.com</b>, pilih project, lalu <b>Build → Authentication → Users → Add user</b>.</li>
+              <li>Isi email dan sandi untuk orang kedua, lalu <b>Add user</b>.</li>
+              <li>Berikan email dan sandi itu kepadanya. Ia login di halaman login aplikasi yang sama.</li>
+              <li>Untuk mencabut akses: di daftar Users klik ⋮ → <b>Disable account</b> atau <b>Delete account</b>. Sesi yang sedang aktif bisa bertahan sampai sekitar 1 jam.</li>
+            </Langkah>
+            <Contoh>Email <b>kasir@rentalku.com</b>, sandi buatan pemilik. Email boleh karangan, tetapi tombol “Lupa sandi?” hanya bekerja bila emailnya asli dan bisa menerima surat.</Contoh>
+            <p>Semua pengguna punya akses penuh ke data. Tambahkan hanya orang yang dipercaya, dan biarkan pilihan “Enable create (sign-up)” di Authentication → Settings tetap mati.</p>
+          </Bab>
+
+          <Bab judul="15. Masalah yang sering muncul">
             <p><b>“Bentrok”</b>: unit sudah dipesan di jam itu, pilih unit atau jam lain. <b>Peta kosong</b>: unit belum punya koordinat. <b>PDF tidak masuk WhatsApp</b>: gunakan menu Bagikan, atau lampirkan PDF yang terunduh secara manual. <b>Uji koneksi GPS gagal</b>: periksa https, CORS, dan autentikasi.</p>
           </Bab>
         </div>
